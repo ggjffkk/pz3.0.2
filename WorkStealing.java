@@ -7,33 +7,31 @@ public class WorkStealing {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Користувацьке введення
         System.out.print("Enter a directory to search for files: ");
         String directoryPath = scanner.nextLine();
         System.out.print("Enter a file extension (for example, .pdf): ");
         String fileExtension = scanner.nextLine();
 
-        // Визначаємо, чи існує така директорія
+        // Існування директоріїї
         File dir = new File(directoryPath);
         if (!dir.exists() || !dir.isDirectory()) {
             System.out.println("The specified directory does not exist or is not a directory.");
             return;
         }
 
-        // Пошук за допомогою Work Stealing
+        // Пошук 
         long startTime = System.currentTimeMillis();
         int result = searchFilesWithWorkStealing(directoryPath, fileExtension);
         long endTime = System.currentTimeMillis() - startTime;
         System.out.println("Result Work Stealing: " + result + " files found. Time: " + endTime + " ms");
     }
 
-    // Пошук файлів за допомогою Fork/Join (Work Stealing)
+    // Пошук за допомогою Fork/Join 
     private static int searchFilesWithWorkStealing(String directoryPath, String fileExtension) {
         ForkJoinPool pool = new ForkJoinPool();
         return pool.invoke(new FileSearchTask(directoryPath, fileExtension));
     }
 
-    // Завдання для Fork/Join (Work Stealing)
     static class FileSearchTask extends RecursiveTask<Integer> {
         private String directoryPath;
         private String fileExtension;
@@ -52,7 +50,6 @@ public class WorkStealing {
             if (files != null) {
                 List<FileSearchTask> tasks = new ArrayList<>();
 
-                // Розподіляємо файли на підзадачі
                 for (File file : files) {
                     if (file.isDirectory()) {
                         tasks.add(new FileSearchTask(file.getPath(), fileExtension));
@@ -63,12 +60,10 @@ public class WorkStealing {
                     }
                 }
 
-                // Якщо є підзадачі, запускаємо їх
                 if (!tasks.isEmpty()) {
                     for (FileSearchTask task : tasks) {
                         task.fork();
                     }
-                    // Збираємо результати
                     for (FileSearchTask task : tasks) {
                         count += task.join();
                     }
